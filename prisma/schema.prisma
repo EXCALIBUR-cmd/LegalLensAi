@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  documents     Document[]
+  analyses      Analysis[]
+}
+
+model Document {
+  id            String    @id @default(cuid())
+  title         String
+  content       String    @db.Text
+  fileType      String
+  fileSize      Int
+  uploadedAt    DateTime  @default(now())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analyses      Analysis[]
+  
+  @@index([userId])
+}
+
+model Analysis {
+  id            String    @id @default(cuid())
+  documentId    String
+  document      Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  summary       String    @db.Text
+  keyClauses    Json      // Array of key clauses with their positions and explanations
+  legalTerms    Json      // Simplified explanations of legal terms
+  riskFactors   Json      // Identified risk factors
+  createdAt     DateTime  @default(now())
+  
+  @@index([documentId])
+  @@index([userId])
+}
